@@ -644,11 +644,14 @@ static void invalidate_surface(NV2AState *d, SurfaceBinding *surface)
            "Surface evicted while in use!");
 
     if (surface == r->color_binding) {
-        assert(d->pgraph.surface_color.buffer_dirty);
+        // Some titles (e.g. Silent Scope 2) invalidate the bound color
+        // surface before it is marked dirty. Force re-evaluation on the
+        // next draw instead of aborting.
+        d->pgraph.surface_color.buffer_dirty = true;
         unbind_surface(d, true);
     }
     if (surface == r->zeta_binding) {
-        assert(d->pgraph.surface_zeta.buffer_dirty);
+        d->pgraph.surface_zeta.buffer_dirty = true;
         unbind_surface(d, false);
     }
 
