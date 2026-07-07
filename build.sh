@@ -17,6 +17,9 @@ package_windows() {
             mv "dist/$keep" dist-keep/
         fi
     done
+    # Never wipe the user's game images on rebuild
+    find dist -maxdepth 1 \( -name '*.iso' -o -name '*.xiso' \) \
+        -exec mv {} dist-keep/ \; 2>/dev/null || true
     rm -rf dist
     mkdir -p dist
     if test -n "$(ls -A dist-keep 2>/dev/null)"; then
