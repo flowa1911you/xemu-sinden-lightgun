@@ -76,7 +76,7 @@ enum controller_state_axis_index {
 enum controller_input_device_type {
     INPUT_DEVICE_SDL_KEYBOARD,
     INPUT_DEVICE_SDL_GAMEPAD,
-    INPUT_DEVICE_RAWINPUT_MOUSE, // HID mouse/lightgun (Windows Raw Input)
+    INPUT_DEVICE_RAWINPUT_MOUSE, // HID mouse/lightgun (Raw Input / evdev)
 };
 
 enum peripheral_type { PERIPHERAL_NONE, PERIPHERAL_XMU, PERIPHERAL_TYPE_COUNT };
@@ -111,8 +111,10 @@ typedef struct ControllerState {
     SDL_GUID            sdl_joystick_guid;
 
     // if type == INPUT_DEVICE_RAWINPUT_MOUSE
-    void     *rawinput_handle;      // Raw Input HANDLE identifying the mouse
-    char     *rawinput_path;        // Device interface path (owned)
+    void     *rawinput_handle;      // Backend handle: Raw Input HANDLE on
+                                    // Windows, EvdevMouse* on Linux
+    char     *rawinput_path;        // Device path (owned): interface path on
+                                    // Windows, /dev/input/eventN on Linux
     char      rawinput_guid[16];    // Stable pseudo-GUID for settings ("mouse:xxxxxxxx")
     uint32_t  rawinput_buttons;     // XEMU_RAWINPUT_BUTTON_* bits
     int32_t   rawinput_client_x;    // Last aim position, window client pixels

@@ -24,6 +24,7 @@ xemu_ss.add(files(
   'flowa-config.c',
   'xemu-input.c',
   'xemu-rawinput.c',
+  'xemu-evdev.c',
   'xemu-monitor.c',
   'xemu-net.c',
   'xemu-settings.cc',

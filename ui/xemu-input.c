@@ -334,7 +334,7 @@ void xemu_input_init(void)
 
     QTAILQ_INSERT_TAIL(&available_controllers, new_con, entry);
 
-    // Enumerate HID mice/lightguns (Windows only)
+    // Enumerate HID mice/lightguns (Raw Input on Windows, evdev on Linux)
     xemu_rawinput_init(xemu_get_window());
 }
 
@@ -350,7 +350,17 @@ int xemu_input_get_controller_default_bind_port(ControllerState *state, int star
     }
 
     for (int i = start; i < 4; i++) {
-        if (strcmp(guid, *port_index_to_settings_key_map[i]) == 0) {
+        const char *saved = *port_index_to_settings_key_map[i];
+        if (strcmp(guid, saved) == 0) {
+            return i;
+        }
+        // Frontends (e.g. Batocera's configgen) can address a mouse or
+        // lightgun by its device node instead of the hashed pseudo-GUID:
+        // port1 = "evdev:/dev/input/event5"
+        if (state->type == INPUT_DEVICE_RAWINPUT_MOUSE &&
+            state->rawinput_path != NULL &&
+            strncmp(saved, "evdev:", 6) == 0 &&
+            strcmp(saved + 6, state->rawinput_path) == 0) {
             return i;
         }
     }

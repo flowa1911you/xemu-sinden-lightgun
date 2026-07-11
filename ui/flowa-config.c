@@ -263,6 +263,13 @@ static void flowa_scan_machine_dirs(void)
 
 void flowa_config_load(void)
 {
+#ifndef _WIN32
+    // The portable INI (and the machine-dir autodetect / EEPROM anchoring
+    // that comes with it) is a feature of the Windows package. On Linux a
+    // frontend launcher (e.g. Batocera's configgen) owns xemu.toml and
+    // must not be overridden at boot.
+    return;
+#endif
     char *path = get_ini_path();
     FILE *f = fopen(path, "r");
 
@@ -490,6 +497,10 @@ static char *get_eula_path(void)
 
 bool flowa_should_show_welcome(void)
 {
+#ifndef _WIN32
+    // No welcome popup over frontend-launched games (Batocera & co.)
+    return false;
+#endif
     char *path = get_eula_path();
     bool exists = g_file_test(path, G_FILE_TEST_EXISTS);
     g_free(path);

@@ -1,11 +1,12 @@
 /*
- * xemu Raw Input mouse support
+ * xemu per-device mouse/lightgun support
  *
- * Enumerates HID mice individually via the Windows Raw Input API so that
- * multiple pointer devices (e.g. Sinden Lightguns, which appear as absolute
- * mice) can be told apart and bound to different controller ports. Each
- * detected mouse is exposed as a ControllerState of type
- * INPUT_DEVICE_RAWINPUT_MOUSE in the available controllers list.
+ * Enumerates HID mice individually (Raw Input API on Windows, evdev on
+ * Linux — see xemu-rawinput.c and xemu-evdev.c) so that multiple pointer
+ * devices (e.g. Sinden Lightguns, which appear as absolute mice) can be
+ * told apart and bound to different controller ports. Each detected mouse
+ * is exposed as a ControllerState of type INPUT_DEVICE_RAWINPUT_MOUSE in
+ * the available controllers list.
  *
  * Copyright (C) 2026 xemu contributors
  *
@@ -41,7 +42,7 @@ extern "C" {
 
 // Enumerate HID mice and start receiving per-device input. Must be called
 // after the main SDL window has been created, with the QEMU main loop lock
-// held. No-op on non-Windows hosts.
+// held. No-op on hosts without a backend (e.g. macOS).
 void xemu_rawinput_init(SDL_Window *window);
 
 // Process queued device arrivals/removals. Hotplug notifications come in
