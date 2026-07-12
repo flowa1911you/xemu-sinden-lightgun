@@ -60,6 +60,7 @@ typedef struct MapSlot {
     const char *parsed_from; // spec value the cache was built from
     uint32_t def_mouse_button; // default source (0 = none)
     int def_key_code; // default raw key code on the aiming device (0 = none)
+    int def_key_code2; // alternate default raw key code (0 = none)
     uint32_t controller_button; // 0 when the target is an axis
     int axis; // CONTROLLER_AXIS_* target, -1 = none (analog triggers)
     MapSource src;
@@ -164,38 +165,43 @@ static void pointer_apply_mapping(ControllerState *state)
     // up as arrow keys on the gun's own event device).
     static MapSlot map_slots[] = {
         { &g_config.input.lightgun_mapping.trigger, NULL,
-          XEMU_RAWINPUT_BUTTON_LEFT, 0, CONTROLLER_BUTTON_A, -1 },
+          XEMU_RAWINPUT_BUTTON_LEFT, 0, 0, CONTROLLER_BUTTON_A, -1 },
         { &g_config.input.lightgun_mapping.b, NULL,
-          XEMU_RAWINPUT_BUTTON_RIGHT, 0, CONTROLLER_BUTTON_B, -1 },
+          XEMU_RAWINPUT_BUTTON_RIGHT, 0, 0, CONTROLLER_BUTTON_B, -1 },
         { &g_config.input.lightgun_mapping.start, NULL,
-          XEMU_RAWINPUT_BUTTON_MIDDLE, 0, CONTROLLER_BUTTON_START, -1 },
+          XEMU_RAWINPUT_BUTTON_MIDDLE, 0, 0, CONTROLLER_BUTTON_START, -1 },
         { &g_config.input.lightgun_mapping.back, NULL,
-          XEMU_RAWINPUT_BUTTON_X1, 0, CONTROLLER_BUTTON_BACK, -1 },
+          XEMU_RAWINPUT_BUTTON_X1, 0, 0, CONTROLLER_BUTTON_BACK, -1 },
         { &g_config.input.lightgun_mapping.x, NULL,
-          XEMU_RAWINPUT_BUTTON_X2, 0, CONTROLLER_BUTTON_X, -1 },
+          XEMU_RAWINPUT_BUTTON_X2, 0, 0, CONTROLLER_BUTTON_X, -1 },
+        // D-pad defaults: arrow keys on the device, or the BTN_5..BTN_8
+        // codes Batocera's Sinden driver emits on its virtual gun device
         { &g_config.input.lightgun_mapping.dpad_up, NULL, 0,
-          103 /* KEY_UP */, CONTROLLER_BUTTON_DPAD_UP, -1 },
+          103 /* KEY_UP */, 261 /* BTN_5 */, CONTROLLER_BUTTON_DPAD_UP, -1 },
         { &g_config.input.lightgun_mapping.dpad_down, NULL, 0,
-          108 /* KEY_DOWN */, CONTROLLER_BUTTON_DPAD_DOWN, -1 },
+          108 /* KEY_DOWN */, 262 /* BTN_6 */,
+          CONTROLLER_BUTTON_DPAD_DOWN, -1 },
         { &g_config.input.lightgun_mapping.dpad_left, NULL, 0,
-          105 /* KEY_LEFT */, CONTROLLER_BUTTON_DPAD_LEFT, -1 },
+          105 /* KEY_LEFT */, 263 /* BTN_7 */,
+          CONTROLLER_BUTTON_DPAD_LEFT, -1 },
         { &g_config.input.lightgun_mapping.dpad_right, NULL, 0,
-          106 /* KEY_RIGHT */, CONTROLLER_BUTTON_DPAD_RIGHT, -1 },
-        { &g_config.input.lightgun_mapping.y, NULL, 0, 0,
+          106 /* KEY_RIGHT */, 264 /* BTN_8 */,
+          CONTROLLER_BUTTON_DPAD_RIGHT, -1 },
+        { &g_config.input.lightgun_mapping.y, NULL, 0, 0, 0,
           CONTROLLER_BUTTON_Y, -1 },
-        { &g_config.input.lightgun_mapping.white, NULL, 0, 0,
+        { &g_config.input.lightgun_mapping.white, NULL, 0, 0, 0,
           CONTROLLER_BUTTON_WHITE, -1 },
-        { &g_config.input.lightgun_mapping.black, NULL, 0, 0,
+        { &g_config.input.lightgun_mapping.black, NULL, 0, 0, 0,
           CONTROLLER_BUTTON_BLACK, -1 },
-        { &g_config.input.lightgun_mapping.lstick, NULL, 0, 0,
+        { &g_config.input.lightgun_mapping.lstick, NULL, 0, 0, 0,
           CONTROLLER_BUTTON_LSTICK, -1 },
-        { &g_config.input.lightgun_mapping.rstick, NULL, 0, 0,
+        { &g_config.input.lightgun_mapping.rstick, NULL, 0, 0, 0,
           CONTROLLER_BUTTON_RSTICK, -1 },
-        { &g_config.input.lightgun_mapping.ltrig, NULL, 0, 0, 0,
+        { &g_config.input.lightgun_mapping.ltrig, NULL, 0, 0, 0, 0,
           CONTROLLER_AXIS_LTRIG },
-        { &g_config.input.lightgun_mapping.rtrig, NULL, 0, 0, 0,
+        { &g_config.input.lightgun_mapping.rtrig, NULL, 0, 0, 0, 0,
           CONTROLLER_AXIS_RTRIG },
-        { &g_config.input.lightgun_mapping.guide, NULL, 0, 0,
+        { &g_config.input.lightgun_mapping.guide, NULL, 0, 0, 0,
           CONTROLLER_BUTTON_GUIDE, -1 },
     };
 
@@ -207,7 +213,9 @@ static void pointer_apply_mapping(ControllerState *state)
         if (spec == NULL || spec[0] == '\0') {
             if ((slot->def_mouse_button && (mb & slot->def_mouse_button)) ||
                 (slot->def_key_code &&
-                 pointer_backend_key_pressed(state, slot->def_key_code))) {
+                 pointer_backend_key_pressed(state, slot->def_key_code)) ||
+                (slot->def_key_code2 &&
+                 pointer_backend_key_pressed(state, slot->def_key_code2))) {
                 state->buttons |= slot->controller_button;
             }
             continue;
