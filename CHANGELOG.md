@@ -1,5 +1,29 @@
 # Changelog — XEMU LightGun Edition (By Code Flow)
 
+## v3.1 — Batocera Edition (July 2026)
+
+### New platform: Batocera Linux (43+)
+- New **evdev input backend** (`ui/xemu-evdev.c`): pointer devices are
+  enumerated individually from the kernel (same per-device philosophy as
+  the Windows Raw Input backend), with hotplug support. The
+  platform-independent aim pipeline (button mapping, adaptive smoothing,
+  sensitivity, offscreen detection) is now shared between Windows and
+  Linux — Windows behavior is unchanged.
+- **Frontend gun assignment**: saved bindings accept `evdev:<device>`
+  aliases, so Batocera's launcher assigns detected guns to player ports
+  automatically at every game launch.
+- **Gun extra buttons read straight from the device** (`k<code>` mapping
+  specs): lightgun D-pads and extra buttons work even when the windowing
+  system never delivers them (X11 ignores joystick-class devices). The
+  Sinden D-pad drives the Xbox D-pad out of the box.
+- **Batocera integration package**: boot-time auto-installer (custom.sh +
+  idempotent patcher) that teaches Batocera's launcher about guns, adds a
+  LIGHTGUN submenu (guns count, aim smoothing, aim sensitivity) to the
+  EmulationStation menus and installs **Flowa GunSetup**, a native GTK
+  configurator in the Ports menu with live button-capture mapping.
+- On Linux the Windows-only portable INI, machine-folder autodetect and
+  welcome popup are disabled: the frontend owns the configuration.
+
 ## v3.0 (July 2026)
 
 ### Performance — Silent Scope Complete finally playable
