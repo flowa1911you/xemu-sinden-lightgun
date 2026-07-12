@@ -52,6 +52,15 @@ static bool g_initialized;
 // Shared aim/mapping logic (also used by the Linux evdev backend)
 #include "xemu-pointer-aim.c.inc"
 
+static bool pointer_backend_key_pressed(ControllerState *con, int key_code)
+{
+    // Raw Input receives no keyboard events from pointer devices; gun
+    // extra buttons arrive as regular mouse buttons on Windows.
+    (void)con;
+    (void)key_code;
+    return false;
+}
+
 static ControllerState *rawinput_find_controller(HANDLE hdev)
 {
     ControllerState *iter;

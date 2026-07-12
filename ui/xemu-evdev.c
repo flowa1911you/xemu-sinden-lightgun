@@ -93,7 +93,21 @@ typedef struct EvdevMouse {
     struct input_absinfo abs_x, abs_y;
     int32_t raw_x, raw_y; // last absolute position, device units
     float rel_x, rel_y;   // accumulated position for relative mice, px
+    // Full key/button state of the device. Guns expose their extra
+    // buttons as keyboard keys (Sinden D-pad = arrow keys) or low BTN_*
+    // codes that X11 never delivers to SDL, so the mapping reads them
+    // straight from here ("k<code>" specs and D-pad defaults).
+    unsigned long key_state[EV_NLONGS(KEY_MAX + 1)];
 } EvdevMouse;
+
+static bool pointer_backend_key_pressed(ControllerState *con, int key_code)
+{
+    EvdevMouse *em = con->rawinput_handle;
+    if (em == NULL || key_code <= 0 || key_code > KEY_MAX) {
+        return false;
+    }
+    return ev_test_bit(key_code, em->key_state);
+}
 
 static ControllerState *evdev_find_controller(const char *devnode)
 {
@@ -291,6 +305,16 @@ static void evdev_drain_device(ControllerState *con)
             const struct input_event *e = &ev[i];
             switch (e->type) {
             case EV_KEY: {
+                if (e->code <= KEY_MAX) {
+                    unsigned long *w =
+                        &em->key_state[e->code / EV_BITS_PER_LONG];
+                    unsigned long m = 1UL << (e->code % EV_BITS_PER_LONG);
+                    if (e->value) {
+                        *w |= m;
+                    } else {
+                        *w &= ~m;
+                    }
+                }
                 uint32_t bit = 0;
                 switch (e->code) {
                 case BTN_LEFT:   bit = XEMU_RAWINPUT_BUTTON_LEFT;   break;

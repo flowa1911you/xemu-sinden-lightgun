@@ -43,6 +43,7 @@ static uint32_t fnv1a_hash(const char *s)
 typedef enum {
     MAP_SRC_NONE = 0,
     MAP_SRC_MOUSE,
+    MAP_SRC_MOUSE_KEY, // raw key/button code read from the pointer device
     MAP_SRC_KEY,
 } MapSourceKind;
 
@@ -50,6 +51,7 @@ typedef struct MapSource {
     MapSourceKind kind;
     char mouse_guid[20]; // "mouse:xxxxxxxx"
     uint32_t mouse_button; // XEMU_RAWINPUT_BUTTON_*
+    int key_code; // raw input-event code ("k<code>" specs)
     SDL_Scancode scancode;
 } MapSource;
 
@@ -57,10 +59,18 @@ typedef struct MapSlot {
     const char **spec; // config string
     const char *parsed_from; // spec value the cache was built from
     uint32_t def_mouse_button; // default source (0 = none)
+    int def_key_code; // default raw key code on the aiming device (0 = none)
     uint32_t controller_button; // 0 when the target is an axis
     int axis; // CONTROLLER_AXIS_* target, -1 = none (analog triggers)
     MapSource src;
 } MapSlot;
+
+// Whether the pointer device behind `con` currently reports the raw
+// key/button `key_code` as pressed. Lightguns often expose extra buttons
+// as keyboard keys or joystick buttons that never reach SDL (X11 ignores
+// joystick-class devices), so the backend reads them straight from the
+// device. Windows has no such path and always returns false.
+static bool pointer_backend_key_pressed(ControllerState *con, int key_code);
 
 static void map_parse(MapSource *out, const char *spec)
 {
@@ -84,6 +94,15 @@ static void map_parse(MapSource *out, const char *spec)
             out->mouse_button = XEMU_RAWINPUT_BUTTON_X1;
         } else if (strcmp(btn, "x2") == 0) {
             out->mouse_button = XEMU_RAWINPUT_BUTTON_X2;
+        } else if (btn[0] == 'k' && btn[1] >= '0' && btn[1] <= '9') {
+            // Raw input-event code on the device, e.g. "k103" = KEY_UP.
+            // Lets lightgun extra buttons (D-pad, pump, BTN_1..) work even
+            // when the windowing system never delivers them as keyboard.
+            out->key_code = atoi(btn + 1);
+            if (out->key_code > 0) {
+                out->kind = MAP_SRC_MOUSE_KEY;
+            }
+            return;
         } else {
             return;
         }
@@ -112,6 +131,19 @@ static bool map_source_pressed(const MapSource *src, ControllerState *own)
         }
         return false;
     }
+    case MAP_SRC_MOUSE_KEY: {
+        if (strcmp(own->rawinput_guid, src->mouse_guid) == 0) {
+            return pointer_backend_key_pressed(own, src->key_code);
+        }
+        ControllerState *iter;
+        QTAILQ_FOREACH(iter, &available_controllers, entry) {
+            if (iter->type == INPUT_DEVICE_RAWINPUT_MOUSE &&
+                strcmp(iter->rawinput_guid, src->mouse_guid) == 0) {
+                return pointer_backend_key_pressed(iter, src->key_code);
+            }
+        }
+        return false;
+    }
     case MAP_SRC_KEY: {
         const bool *kb = SDL_GetKeyboardState(NULL);
         return kb != NULL && kb[src->scancode];
@@ -127,41 +159,43 @@ static bool map_source_pressed(const MapSource *src, ControllerState *own)
 static void pointer_apply_mapping(ControllerState *state)
 {
     // Button mapping: each function uses its custom [mapping] binding when
-    // configured, otherwise the default mouse button (dpad has no default).
+    // configured, otherwise the default mouse button, or the default raw
+    // key on the aiming device (the D-pad of guns such as the Sinden shows
+    // up as arrow keys on the gun's own event device).
     static MapSlot map_slots[] = {
         { &g_config.input.lightgun_mapping.trigger, NULL,
-          XEMU_RAWINPUT_BUTTON_LEFT, CONTROLLER_BUTTON_A, -1 },
+          XEMU_RAWINPUT_BUTTON_LEFT, 0, CONTROLLER_BUTTON_A, -1 },
         { &g_config.input.lightgun_mapping.b, NULL,
-          XEMU_RAWINPUT_BUTTON_RIGHT, CONTROLLER_BUTTON_B, -1 },
+          XEMU_RAWINPUT_BUTTON_RIGHT, 0, CONTROLLER_BUTTON_B, -1 },
         { &g_config.input.lightgun_mapping.start, NULL,
-          XEMU_RAWINPUT_BUTTON_MIDDLE, CONTROLLER_BUTTON_START, -1 },
+          XEMU_RAWINPUT_BUTTON_MIDDLE, 0, CONTROLLER_BUTTON_START, -1 },
         { &g_config.input.lightgun_mapping.back, NULL,
-          XEMU_RAWINPUT_BUTTON_X1, CONTROLLER_BUTTON_BACK, -1 },
+          XEMU_RAWINPUT_BUTTON_X1, 0, CONTROLLER_BUTTON_BACK, -1 },
         { &g_config.input.lightgun_mapping.x, NULL,
-          XEMU_RAWINPUT_BUTTON_X2, CONTROLLER_BUTTON_X, -1 },
+          XEMU_RAWINPUT_BUTTON_X2, 0, CONTROLLER_BUTTON_X, -1 },
         { &g_config.input.lightgun_mapping.dpad_up, NULL, 0,
-          CONTROLLER_BUTTON_DPAD_UP, -1 },
+          103 /* KEY_UP */, CONTROLLER_BUTTON_DPAD_UP, -1 },
         { &g_config.input.lightgun_mapping.dpad_down, NULL, 0,
-          CONTROLLER_BUTTON_DPAD_DOWN, -1 },
+          108 /* KEY_DOWN */, CONTROLLER_BUTTON_DPAD_DOWN, -1 },
         { &g_config.input.lightgun_mapping.dpad_left, NULL, 0,
-          CONTROLLER_BUTTON_DPAD_LEFT, -1 },
+          105 /* KEY_LEFT */, CONTROLLER_BUTTON_DPAD_LEFT, -1 },
         { &g_config.input.lightgun_mapping.dpad_right, NULL, 0,
-          CONTROLLER_BUTTON_DPAD_RIGHT, -1 },
-        { &g_config.input.lightgun_mapping.y, NULL, 0,
+          106 /* KEY_RIGHT */, CONTROLLER_BUTTON_DPAD_RIGHT, -1 },
+        { &g_config.input.lightgun_mapping.y, NULL, 0, 0,
           CONTROLLER_BUTTON_Y, -1 },
-        { &g_config.input.lightgun_mapping.white, NULL, 0,
+        { &g_config.input.lightgun_mapping.white, NULL, 0, 0,
           CONTROLLER_BUTTON_WHITE, -1 },
-        { &g_config.input.lightgun_mapping.black, NULL, 0,
+        { &g_config.input.lightgun_mapping.black, NULL, 0, 0,
           CONTROLLER_BUTTON_BLACK, -1 },
-        { &g_config.input.lightgun_mapping.lstick, NULL, 0,
+        { &g_config.input.lightgun_mapping.lstick, NULL, 0, 0,
           CONTROLLER_BUTTON_LSTICK, -1 },
-        { &g_config.input.lightgun_mapping.rstick, NULL, 0,
+        { &g_config.input.lightgun_mapping.rstick, NULL, 0, 0,
           CONTROLLER_BUTTON_RSTICK, -1 },
-        { &g_config.input.lightgun_mapping.ltrig, NULL, 0, 0,
+        { &g_config.input.lightgun_mapping.ltrig, NULL, 0, 0, 0,
           CONTROLLER_AXIS_LTRIG },
-        { &g_config.input.lightgun_mapping.rtrig, NULL, 0, 0,
+        { &g_config.input.lightgun_mapping.rtrig, NULL, 0, 0, 0,
           CONTROLLER_AXIS_RTRIG },
-        { &g_config.input.lightgun_mapping.guide, NULL, 0,
+        { &g_config.input.lightgun_mapping.guide, NULL, 0, 0,
           CONTROLLER_BUTTON_GUIDE, -1 },
     };
 
@@ -171,7 +205,9 @@ static void pointer_apply_mapping(ControllerState *state)
         const char *spec = *slot->spec;
 
         if (spec == NULL || spec[0] == '\0') {
-            if (slot->def_mouse_button && (mb & slot->def_mouse_button)) {
+            if ((slot->def_mouse_button && (mb & slot->def_mouse_button)) ||
+                (slot->def_key_code &&
+                 pointer_backend_key_pressed(state, slot->def_key_code))) {
                 state->buttons |= slot->controller_button;
             }
             continue;
