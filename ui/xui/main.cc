@@ -342,13 +342,11 @@ void xemu_hud_update(void)
                   "https://github.com/flowa1911you");
         ImGui::Dummy(ImVec2(0, 8 * g_viewport_mgr.m_scale));
         ImGui::Checkbox("Don't show this again", &flowa_popup_dont_show);
-        ImGui::SameLine(0, 24 * g_viewport_mgr.m_scale);
-        bool flowa_popup_close = ImGui::Button("Close");
+        bool flowa_popup_close = false;
         double elapsed = ImGui::GetTime() - flowa_popup_opened_at;
-        if (flowa_popup_dont_show) {
-            // The user is deciding: hold the popup open until they close it.
-            ImGui::Text("EULA.txt will be created next to the executable.");
-        } else {
+        if (!flowa_popup_dont_show) {
+            // Countdown pauses while the box is ticked, so the popup
+            // can't vanish while the user is deciding.
             int remaining = (int)(flowa_popup_duration - elapsed) + 1;
             if (remaining < 0) {
                 remaining = 0;
@@ -358,6 +356,15 @@ void xemu_hud_update(void)
             if (elapsed >= flowa_popup_duration) {
                 flowa_popup_close = true;
             }
+        }
+        // Bottom row, like a real dialog: separator + centered Close.
+        ImGui::Dummy(ImVec2(0, 10 * g_viewport_mgr.m_scale));
+        ImGui::Separator();
+        ImGui::Dummy(ImVec2(0, 6 * g_viewport_mgr.m_scale));
+        float flowa_btn_w = 140 * g_viewport_mgr.m_scale;
+        ImGui::SetCursorPosX((ImGui::GetWindowWidth() - flowa_btn_w) * 0.5f);
+        if (ImGui::Button("Close", ImVec2(flowa_btn_w, 0))) {
+            flowa_popup_close = true;
         }
         ImGui::SetWindowFontScale(1.0f);
         if (flowa_popup_close) {
