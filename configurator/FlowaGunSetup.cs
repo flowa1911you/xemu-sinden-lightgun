@@ -1,8 +1,7 @@
 //
-// Code Flow GunSetup v3.0 - xemu LightGun Edition Configurator
+// Code Flow GunSetup v4.0 - xemu LightGun Edition Configurator
 //
-// Made by Code Flow - https://www.youtube.com/@flowachannel4731
-// Created in collaboration with the Light Gun Lunatics community.
+// Made by Code Flow - https://github.com/flowa1911you
 //
 // Single-file WinForms app, compiled with the C# compiler bundled with
 // the .NET Framework (no extra installs needed):
@@ -25,8 +24,8 @@ using System.Windows.Forms;
 [assembly: System.Reflection.AssemblyProduct("Code Flow GunSetup")]
 [assembly: System.Reflection.AssemblyDescription(
     "xemu LightGun Edition Configurator")]
-[assembly: System.Reflection.AssemblyVersion("3.0.0.0")]
-[assembly: System.Reflection.AssemblyFileVersion("3.0.0.0")]
+[assembly: System.Reflection.AssemblyVersion("4.0.0.0")]
+[assembly: System.Reflection.AssemblyFileVersion("4.0.0.0")]
 
 namespace FlowaGunSetup
 {
@@ -354,7 +353,7 @@ namespace FlowaGunSetup
             baseDir = AppDomain.CurrentDomain.BaseDirectory;
             iniPath = Path.Combine(baseDir, "flowa_config.ini");
 
-            Text = "Code Flow GunSetup v3.0";
+            Text = "Code Flow GunSetup v4.0";
             KeyPreview = true; // capture keys for the Mapping tab
             BackColor = BgColor;
             ForeColor = TextColor;
@@ -447,7 +446,7 @@ namespace FlowaGunSetup
         void BuildUi()
         {
             // Header
-            Label title = MakeLabel("CODE FLOW  GUNSETUP  v3.0", 20, 14,
+            Label title = MakeLabel("CODE FLOW  GUNSETUP  v4.0", 20, 14,
                                     AccentColor);
             title.Font = new Font("Segoe UI", 16f, FontStyle.Bold);
             Label sub = MakeLabel(
@@ -591,13 +590,12 @@ namespace FlowaGunSetup
 
             // ---- Bottom: credits + actions
             Label credits = MakeLabel(
-                "Made by flowa - created in collaboration with the Light "
-                + "Gun Lunatics community.", 16, 688, DimColor);
+                "Made by flowa.", 16, 688, DimColor);
             Label support = MakeLabel(
-                "Support the channel and subscribe so you don't miss "
-                + "future releases and updates:", 16, 708, TextColor);
+                "Source code, releases and updates on GitHub:",
+                16, 708, TextColor);
             LinkLabel link = new LinkLabel();
-            link.Text = "youtube.com/@flowachannel4731";
+            link.Text = "github.com/flowa1911you";
             link.AutoSize = true;
             link.Location = new Point(16, 728);
             link.LinkColor = AccentColor;
@@ -1189,7 +1187,7 @@ namespace FlowaGunSetup
 
         void OnLinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
-            Process.Start("https://www.youtube.com/@flowachannel4731");
+            Process.Start("https://github.com/flowa1911you");
         }
 
         void OnBrowseIso(object sender, EventArgs e)
@@ -1520,7 +1518,7 @@ namespace FlowaGunSetup
 
             w("; =================================================================");
             w(";  flowa's xemu fork - custom settings");
-            w(";  Support the channel: https://www.youtube.com/@flowachannel4731");
+            w(";  Project home: https://github.com/flowa1911you");
             w(";");
             w(";  These values are applied at EVERY startup and override the");
             w(";  corresponding settings stored in xemu.toml.");

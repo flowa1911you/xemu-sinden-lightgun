@@ -38,7 +38,7 @@ static int match_enum(const char *val, const char *const *names, int count)
 static const char *default_ini =
 "; =================================================================\n"
 ";  flowa's xemu fork - custom settings\n"
-";  Support the channel: https://www.youtube.com/@flowachannel4731\n"
+";  Project home: https://github.com/flowa1911you\n"
 ";\n"
 ";  These values are applied at EVERY startup and override the\n"
 ";  corresponding settings stored in xemu.toml.\n"
@@ -492,7 +492,10 @@ bool flowa_config_is_first_run(void)
 
 static char *get_eula_path(void)
 {
-    return g_strdup_printf("%sEULA.txt", xemu_settings_get_base_path());
+    // Always next to the executable, exactly like flowa_config.ini: the
+    // splash opt-out marker lives in the program folder, never in AppData.
+    const char *base = SDL_GetBasePath();
+    return g_strdup_printf("%sEULA.txt", base ? base : "");
 }
 
 bool flowa_should_show_welcome(void)

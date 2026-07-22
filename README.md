@@ -15,12 +15,19 @@
 <p align="center">
   <a href="https://github.com/flowa1911you/xemu-sinden-lightgun/releases"><b>⬇ DOWNLOAD (Releases)</b></a>
   &nbsp;·&nbsp;
-  <a href="https://www.youtube.com/@flowachannel4731"><b>📺 YouTube channel</b></a>
+  <a href="https://github.com/flowa1911you"><b>💻 GitHub profile</b></a>
   &nbsp;·&nbsp;
   <a href="CHANGELOG.md"><b>📋 Full changelog</b></a>
 </p>
 
 ---
+
+## 🆕 What's new in v4.0
+
+- The startup splash has a **"Don't show this again"** checkbox (as in v2):
+  ticking it writes an `EULA.txt` marker next to `xemu.exe`, and while that
+  file exists the splash is skipped. Delete the file to bring it back.
+- All project links now point to GitHub.
 
 ## 🕹️ What's new in v3.1 — Batocera Edition
 
@@ -200,8 +207,8 @@ Python/GTK, no build needed.
 
 ## Credits
 
-- Made by **Code Flow (flowa)** — [youtube.com/@flowachannel4731](https://www.youtube.com/@flowachannel4731).
-  Subscribe so you don't miss future releases and updates!
+- Made by **Code Flow (flowa)** — [github.com/flowa1911you](https://github.com/flowa1911you).
+  Watch the repository so you don't miss future releases and updates!
 - Based on [xemu](https://xemu.app) by Matt Borgerson and contributors —
   see also the upstream site for general documentation
 

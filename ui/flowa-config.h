@@ -39,8 +39,9 @@ void flowa_config_load(void);
 bool flowa_config_is_first_run(void);
 
 // The welcome popup shows at every startup until the user ticks
-// "Don't show again", which writes EULA.txt in the xemu settings folder
-// (AppData\Roaming\xemu). Deleting that file brings the popup back.
+// "Don't show again", which writes EULA.txt next to the executable
+// (same folder as flowa_config.ini, never AppData). Deleting that
+// file brings the popup back.
 bool flowa_should_show_welcome(void);
 void flowa_welcome_dismiss(bool dont_show_again);
 

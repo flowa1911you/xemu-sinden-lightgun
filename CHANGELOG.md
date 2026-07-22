@@ -1,5 +1,18 @@
 # Changelog — XEMU LightGun Edition (By Code Flow)
 
+## v4.0 (July 2026)
+
+- Startup splash: added a **"Don't show this again"** checkbox (returning
+  from v2) and a Close button. Ticking the box writes an `EULA.txt` marker
+  next to the executable; while that file exists the splash is skipped
+  entirely. Deleting the file brings it back. While the box is ticked the
+  auto-close countdown pauses, so the splash can't vanish mid-decision.
+- All support links (splash, configurator credits, generated
+  `flowa_config.ini` header, README) now point to the project's GitHub
+  profile: https://github.com/flowa1911you
+- Removed the community mention from the configurator credits.
+- Splash and Code Flow GunSetup rebranded to v4.0.
+
 ## v3.1 — Batocera Edition (July 2026)
 
 ### New platform: Batocera Linux (43+)
